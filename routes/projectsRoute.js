@@ -6,12 +6,12 @@ import {
     updateProject,
 } from "../controllers/projectsController.js";
 
-const projectsRout = Router();
+const projectsRoutes = Router();
 
-projectsRout.get("/", getAllProjects);
+projectsRoutes.get("/", getAllProjects);
 
-projectsRout.post("/", createProject);
+projectsRoutes.post("/", createProject);
 
-projectsRout.put("/:id", updateProject);
-projectsRout.delete("/:id", deleteProject);
-export { projectsRout };
+projectsRoutes.put("/:id", updateProject);
+projectsRoutes.delete("/:id", deleteProject);
+export { projectsRoutes };

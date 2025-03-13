@@ -36,9 +36,12 @@ const deleteProject = (req, res, next) => {
     if (isNaN(id)) {
         return res.status(400).json({ message: "Invalid id" });
     }
-    let sql = "DELETE FROM projects WHERE id=?";
-    db.run(sql, [id])
-        .then((project) => res.json(project))
+    let sqlProject = "DELETE FROM projects WHERE id=?";
+    let sqlTask = "DELETE FROM tasks WHERE project_id=?";
+    db.run(sqlProject, [id])
+        // .then((project) => res.json(project))
+        .then(() => db.run(sqlTask, [id]))
+        .then((task) => res.send(task))
         .catch((e) => res.json(e.message));
 };
 

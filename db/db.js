@@ -33,8 +33,9 @@ export async function createTable() {
 
     try {
         const db = await openDb();
-        await db.exec(projectsTable);
-        await db.exec(tasksTable);
+        await db.run(projectsTable);
+        await db.run(tasksTable);
+        await db.run("pragma foreign_keys = on");
         console.log("Tables created successfully");
     } catch (error) {
         console.error("Error creating tables:", error.message);
