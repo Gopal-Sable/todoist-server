@@ -1,52 +1,113 @@
 import openDb from "../db/db.js";
+
 const db = await openDb();
 
-const createTask = (req, res) => {
-    const { content, description, due_date, project_id } = req.body;
-    // handle foregn key if not present later
-    if ((!content || !description, !due_date, !project_id)) {
-        return res.status(400).json({ message: "Provide inputs" });
+const createTask = async (req, res) => {
+    try {
+        const { content, description, due_date, project_id } = req.body;
+
+        if (!content || !description || !due_date || !project_id) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
+
+        let sql = `INSERT INTO tasks (content, description, due_date, project_id) VALUES (?, ?, ?, ?)`;
+        const result = await db.run(sql, [
+            content,
+            description,
+            due_date,
+            project_id,
+        ]);
+        return res.status(201).json({
+            message: "Task created successfully",
+        });
+    } catch (err) {
+        if (err.errno === 19) {
+            return res.status(404).json({ error: "Project not present" });
+        }
+        return res.status(500).json({ error: "Server error" });
     }
-    let sql =
-        "INSERT INTO tasks(content, description, due_date, project_id) values(?,?,?,?)";
-    db.run(sql, [content, description, due_date, project_id])
-        .then((task) => res.json(task))
-        .catch((err) => res.json(err));
 };
 
-const getTasks = (req, res) => {
-    let sql = "SELECT * FROM tasks";
-    if (req.params.id) {
-        sql += " WHERE id=?";
+//  Get all tasks or by id
+const getTasks = async (req, res) => {
+    try {
+        let sql = "SELECT * FROM tasks";
+
+        if (req.params.id) {
+            if (isNaN(req.params.id)) {
+                return res.status(400).json({ message: "Invalid task ID" });
+            }
+            sql += " WHERE id=?";
+        }
+
+        const tasks = await db.all(sql, req.params.id);
+        if (req.params.id && tasks.length === 0) {
+            return res.status(404).json({ message: "Task not found" });
+        }
+        return res.json(tasks);
+    } catch (err) {
+        return res.status(500).json({ error: "Server error" });
     }
-    db.all(sql, [req.params.id])
-        .then((tasks) => res.json(tasks))
-        .catch((err) => res.json({ error: err }));
 };
 
-const updateTask = (req, res) => {
-    const { content, description, due_date, is_completed, created_at } =
-        req.body;
-    let id = req.params.id;
-    if ((!content || !description, !due_date, !is_completed, !created_at)) {
-        return res.status(400).json({ message: "Provide inputs" });
+// Update Task by id
+const updateTask = async (req, res) => {
+    try {
+        const { content, description, due_date, is_completed } = req.body;
+        const id = req.params.id;
+
+        if (
+            !content ||
+            !description ||
+            !due_date ||
+            is_completed === undefined
+        ) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
+
+        if (isNaN(id)) {
+            return res.status(400).json({ message: "Invalid task ID" });
+        }
+
+        let sql = `UPDATE tasks SET content = ?, description = ?, due_date = ?, is_completed = ? WHERE id = ?`;
+        const result = await db.run(sql, [
+            content,
+            description,
+            due_date,
+            is_completed,
+            id,
+        ]);
+
+        if (result.changes === 0) {
+            return res.status(404).json({ message: "Task not found" });
+        }
+
+        return res.json({ message: "Task updated successfully" });
+    } catch (err) {
+        return res.status(500).json({ error: "Server error" });
     }
-    let sql =
-        "UPDATE tasks SET content = ?, description = ?, due_date = ?, is_completed = ?, created_at = ? WHERE id = ? ";
-    db.run(sql, [content, description, due_date, is_completed, created_at, id])
-        .then((task) => res.send(task))
-        .catch((err) => res.send(err));
 };
 
-const deleteTask = (req, res) => {
-    let id = req.params.id;
-    if (isNaN(id)) {
-        return res.status(400).json({ message: "Provide valid id" });
+// Delete Task by id
+const deleteTask = async (req, res) => {
+    try {
+        const id = req.params.id;
+
+        if (isNaN(id)) {
+            return res.status(400).json({ message: "Invalid task ID" });
+        }
+
+        let sql = "DELETE FROM tasks WHERE id=?";
+        const result = await db.run(sql, [id]);
+
+        if (result.changes === 0) {
+            return res.status(404).json({ message: "Task not found" });
+        }
+
+        return res.json({ message: "Task deleted successfully" });
+    } catch (err) {
+        return res.status(500).json({ error: "Server error" });
     }
-    let sql = "DELETE FROM tasks WHERE id=?";
-    db.run(sql, [id])
-        .then((task) => res.json(task))
-        .catch((err) => res.send(err));
 };
 
-export { createTask, getTasks, updateTask,deleteTask };
+export { createTask, getTasks, updateTask, deleteTask };

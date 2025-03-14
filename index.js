@@ -10,7 +10,7 @@ app.use(express.json());
 app.use("/api/projects", projectsRoutes);
 app.use("/api/tasks", tasksRoutes);
 app.use("/", (req, res) => {
-    res.status(200).json({ msg: "Hello" });
+    res.status(404).json({ msg: "Page not found" });
 });
 
 app.listen(PORT, () => {

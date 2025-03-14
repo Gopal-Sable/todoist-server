@@ -3,41 +3,43 @@ import { open } from "sqlite";
 
 sqlite3.verbose();
 
-// Create a connection to the database
-export default function openDb() {
-    return open({
+export default async function openDb() {
+    const db = await open({
         filename: "./db/TODOIST.db",
         driver: sqlite3.Database,
     });
+    await db.run("PRAGMA foreign_keys = ON");
+    return db;
 }
 
 // Creates tables if not exist
 export async function createTable() {
-    let projectsTable = `CREATE TABLE IF NOT EXISTS projects (
+    const projectsTable = `CREATE TABLE IF NOT EXISTS projects (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name VARCHAR(255) NOT NULL,
         color VARCHAR(255) NOT NULL DEFAULT "White",
-        is_favorite BOOLEAN DEFAULT FALSE
+        is_favorite INTEGER DEFAULT 0
     )`;
 
-    let tasksTable = `CREATE TABLE IF NOT EXISTS tasks (
+    const tasksTable = `CREATE TABLE IF NOT EXISTS tasks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         content VARCHAR(255) NOT NULL,
         description VARCHAR(255) NOT NULL,
         due_date TEXT NOT NULL,
-        is_completed BOOLEAN DEFAULT FALSE,
+        is_completed INTEGER DEFAULT 0,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         project_id INTEGER,
         FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     )`;
 
+    const db = await openDb();
     try {
-        const db = await openDb();
         await db.run(projectsTable);
         await db.run(tasksTable);
-        await db.run("pragma foreign_keys = on");
         console.log("Tables created successfully");
     } catch (error) {
         console.error("Error creating tables:", error.message);
+    } finally {
+        await db.close();
     }
 }
