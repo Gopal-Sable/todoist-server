@@ -172,7 +172,7 @@ async function createProject(numOfProjects) {
 // console.log("wait for 1 sec");
 
 // setTimeout(async ()=>{
-//     await createProject(1000000);
+    // await createProject(1000000);
 // },1000);
 
 async function createTasks(numOfTasks) {
@@ -187,23 +187,16 @@ async function createTasks(numOfTasks) {
         for (let i = 0; i < numOfTasks; i += BATCH_SIZE) {
             let values = [];
             let placeholders = [];
-            // id INTEGER PRIMARY KEY AUTOINCREMENT,
-            // content VARCHAR(255) NOT NULL,
-            // description VARCHAR(255) NOT NULL,
-            // due_date TEXT NOT NULL,
-            // is_completed INTEGER DEFAULT 0,
-            // created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            // project_id INTEGER,
             for (let j = 0; j < BATCH_SIZE && i + j < numOfTasks; j++) {
-                let content = `content${i + j + 1}`;
-                let description = "description${i + j + 1}";
+                let content = `content ${i + j + 1}`;
+                let description = `description ${i + j + 1}`;
                 let month = Math.floor(Math.random() * 12 + 1);
                 let date =
                     month === 2
                         ? Math.floor(Math.random() * 28 + 1)
                         : Math.floor(Math.random() * 30 + 1);
-                let due_date = `2025-${month + "".padStart(2, 0)}-${
-                    date + "".padStart(2, 0)
+                let due_date = `2025-${(month + "").padStart(2, "0")}-${
+                    (date + "").padStart(2, "0")
                 }`;
                 let is_completed = (i + j + 1) % 2 == 0;
                 let project_id = Math.floor(Math.random() * 1000000 + 1);

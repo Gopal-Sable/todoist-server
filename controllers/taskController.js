@@ -32,36 +32,59 @@ const createTask = async (req, res) => {
 const getTasks = async (req, res) => {
     let reqArr = [];
     let sql = "SELECT * FROM tasks";
-
+    let countQuery = "SELECT COUNT(*) as totalTask FROM tasks";
+    let limit = Number(req.query.limit) || 100;
+    let page = Number(req.query.page) || 1;
+    if (!Number.isInteger(page) || page < 1) {
+        page = 1;
+    }
+    if (!Number.isInteger(limit) || limit > 10000 || limit < 1) {
+        limit = 100;
+    }
     if (req.params.id) {
         if (isNaN(req.params.id)) {
             return res.status(400).json({ message: "Invalid task ID" });
         }
         sql += " WHERE id=?";
+        countQuery = " WHERE id=?";
         reqArr.push(req.params.id);
     }
 
+    //  it will not work for /:id/?anything
     if (Object.keys(req.query).length != 0) {
-        sql += " WHERE 1==1 ";
+        sql += " WHERE 1==1";
+        countQuery += " WHERE 1==1";
         if (req.query.due_date) {
-            sql += "AND due_date like '%?%' ";
-            reqArr.push(req.query.due_date);
+            sql += " AND due_date like ?";
+            countQuery += " AND due_date like ?";
+            reqArr.push("%" + req.query.due_date + "%");
         }
         if (req.query.is_completed) {
-            sql += "AND is_completed = ? ";
+            sql += " AND is_completed = ?";
+            countQuery += " AND is_completed = ?";
             reqArr.push(req.query.is_completed);
         }
         if (req.query.created_at) {
-            sql += "AND created_at like '%?%'";
-            reqArr.push(req.query.created_at);
+            sql += " AND created_at like ?";
+            countQuery += " AND created_at like ?";
+            reqArr.push("%" + req.query.created_at + "%");
         }
     }
+    sql += ` limit ${limit} offset ${(page - 1) * limit}`;
     try {
         const tasks = await db.all(sql, reqArr);
+        const count = await db.get(countQuery, reqArr);
+
         if (req.params.id && tasks.length === 0) {
             return res.status(404).json({ message: "Task not found" });
         }
-        return res.status(200).json(tasks);
+        return res.status(200).json({
+            totalTasks: count.totalTask,
+            currentPage: page,
+            totalPages: Math.ceil(count.totalTask / limit),
+            recordsPerPage: limit,
+            tasks
+        });
     } catch (err) {
         return res.status(500).json(err, { error: "Server error" });
     }
