@@ -26,21 +26,31 @@ const createProject = async (req, res, next) => {
 
 // get all project or specified id
 const getProjects = async (req, res, next) => {
-    try {
-        let sql = "SELECT * FROM projects";
-        if (req.params.id) {
-            if (isNaN(req.params.id)) {
-                return res.status(400).json({ message: "Invalid task ID" });
-            }
-            sql += " WHERE id=?";
+    let page = req.query.page;
+    if (Number.isInteger(page) || page < 0) {
+        page = 0;
+    }
+    let sql = "SELECT * FROM projects";
+    if (req.params.id) {
+        if (isNaN(req.params.id)) {
+            return res.status(400).json({ message: "Invalid task ID" });
         }
+        sql += " WHERE id=?";
+    }
+    sql += ` limit 100 offset ${page * 100 || 0}`;
+    try {
         const projects = await db.all(sql, [req.params.id]);
         if (req.params.id && projects.length === 0) {
             return res.status(404).json({ message: "Project not found" });
         }
-        return res.status(200).json(projects);
+        return res.status(200).json({
+            length: projects.length,
+            currPage: page,
+            pages: Math.ceil(projects.length / 100),
+            projects,
+        });
     } catch (error) {
-        res.status(500).json({ error: "Server error" });
+        res.status(500).json(error);
     }
 };
 
@@ -84,7 +94,7 @@ const deleteProject = async (req, res, next) => {
         }
         res.status(200).json({ message: "Project deleted succefully" });
     } catch (error) {
-        res.status(500).json({error:"Server error"});
+        res.status(500).json({ error: "Server error" });
     }
 };
 

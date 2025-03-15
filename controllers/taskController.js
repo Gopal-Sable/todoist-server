@@ -30,23 +30,40 @@ const createTask = async (req, res) => {
 
 //  Get all tasks or by id
 const getTasks = async (req, res) => {
-    try {
-        let sql = "SELECT * FROM tasks";
+    let reqArr = [];
+    let sql = "SELECT * FROM tasks";
 
-        if (req.params.id) {
-            if (isNaN(req.params.id)) {
-                return res.status(400).json({ message: "Invalid task ID" });
-            }
-            sql += " WHERE id=?";
+    if (req.params.id) {
+        if (isNaN(req.params.id)) {
+            return res.status(400).json({ message: "Invalid task ID" });
         }
+        sql += " WHERE id=?";
+        reqArr.push(req.params.id);
+    }
 
-        const tasks = await db.all(sql, req.params.id);
+    if (Object.keys(req.query).length != 0) {
+        sql += " WHERE 1==1 ";
+        if (req.query.due_date) {
+            sql += "AND due_date like '%?%' ";
+            reqArr.push(req.query.due_date);
+        }
+        if (req.query.is_completed) {
+            sql += "AND is_completed = ? ";
+            reqArr.push(req.query.is_completed);
+        }
+        if (req.query.created_at) {
+            sql += "AND created_at like '%?%'";
+            reqArr.push(req.query.created_at);
+        }
+    }
+    try {
+        const tasks = await db.all(sql, reqArr);
         if (req.params.id && tasks.length === 0) {
             return res.status(404).json({ message: "Task not found" });
         }
-        return res.json(tasks);
+        return res.status(200).json(tasks);
     } catch (err) {
-        return res.status(500).json({ error: "Server error" });
+        return res.status(500).json(err, { error: "Server error" });
     }
 };
 

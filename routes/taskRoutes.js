@@ -7,12 +7,14 @@ import {
 } from "../controllers/taskController.js";
 
 const tasksRoutes = Router();
-
+// fetch all tasks
 tasksRoutes.get("/", getTasks);
+// fetch task by id
 tasksRoutes.get("/:id", getTasks);
-
+//Create task
 tasksRoutes.post("/", createTask);
-
+//  update task by id
 tasksRoutes.put("/:id", updateTask);
+// delete task by id
 tasksRoutes.delete("/:id", deleteTask);
 export { tasksRoutes };
