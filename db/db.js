@@ -24,13 +24,17 @@ export async function createTable() {
         )
     `;
 
-    // const comments=`
-    //     CREATE TABLE IF NOT EXISTS comments(
-    //         id INTEGER PRIMARY KEY AUTOINCREMENT,
-    //         content VARCHAR(255) NOT NULL,
-    //         posted_at TEXT DEFAULT CURRENT_TIMESTAMP
-    //     )
-    // `
+    const comments = `
+        CREATE TABLE IF NOT EXISTS comments(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            content VARCHAR(255) NOT NULL,
+            posted_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            project_id int,
+            task_id int,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+            FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
+        )
+    `;
 
     const projectsTable = `CREATE TABLE IF NOT EXISTS projects (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -172,7 +176,7 @@ async function createProject(numOfProjects) {
 // console.log("wait for 1 sec");
 
 // setTimeout(async ()=>{
-    // await createProject(1000000);
+// await createProject(1000000);
 // },1000);
 
 async function createTasks(numOfTasks) {
@@ -195,9 +199,9 @@ async function createTasks(numOfTasks) {
                     month === 2
                         ? Math.floor(Math.random() * 28 + 1)
                         : Math.floor(Math.random() * 30 + 1);
-                let due_date = `2025-${(month + "").padStart(2, "0")}-${
-                    (date + "").padStart(2, "0")
-                }`;
+                let due_date = `2025-${(month + "").padStart(2, "0")}-${(
+                    date + ""
+                ).padStart(2, "0")}`;
                 let is_completed = (i + j + 1) % 2 == 0;
                 let project_id = Math.floor(Math.random() * 1000000 + 1);
                 values.push(
