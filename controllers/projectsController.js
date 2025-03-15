@@ -28,28 +28,39 @@ const createProject = async (req, res, next) => {
 const getProjects = async (req, res, next) => {
     try {
         let page = req.query.page;
-        let limit = 10000;
-        if (Number.isInteger(page) || page < 0) {
-            page = 0;
+        let limit = req.query.limit;
+        if (Number.isInteger(page) || page < 1) {
+            page = 1;
         }
+        if (Number.isInteger(limit) || limit < 1) {
+            limit = 1;
+        }
+        if (limit > 10000) {
+            limit = 10000;
+        }
+        page = page || 1;
+        limit = limit || 100;
         let sql = "SELECT * FROM projects";
-        let rowCount= "SELCT COUNT(*) FROM projects"
+        let rowCountQuery = "SELECT COUNT(*) as rowCount FROM projects";
         if (req.params.id) {
             if (isNaN(req.params.id)) {
                 return res.status(400).json({ message: "Invalid task ID" });
             }
             sql += " WHERE id=?";
-            rowCount +=" WHERE id=?"
+            // rowCountQuery += " WHERE id=?";
         }
-        sql += ` limit ${limit} offset ${page * limit || 0}`;
+        sql += ` limit ${limit} offset ${(page - 1) * limit}`;
+
+        const rowCount = await db.get(rowCountQuery);
         const projects = await db.all(sql, [req.params.id]);
         if (req.params.id && projects.length === 0) {
             return res.status(404).json({ message: "Project not found" });
         }
         return res.status(200).json({
-            length: projects.length,
+            totalRecord: rowCount.rowCount,
             currPage: page,
-            pages: Math.ceil(projects.length / limit),
+            recordsPerPage: limit,
+            pages: Math.ceil(rowCount.rowCount / limit),
             projects,
         });
     } catch (error) {

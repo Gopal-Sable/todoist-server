@@ -77,7 +77,7 @@ async function createUser(numOfUsers) {
     let startTime = performance.now(); // Start timer
 
     try {
-        await db.run("BEGIN TRANSACTION"); 
+        await db.run("BEGIN TRANSACTION");
 
         for (let i = 0; i < numOfUsers; i += BATCH_SIZE) {
             let values = [];
@@ -87,22 +87,22 @@ async function createUser(numOfUsers) {
                 let name = `user${i + j + 1}`;
                 let email = `abc${i + j + 1}@mail.com`;
                 values.push(name, email);
-                placeholders.push("(?, ?)"); 
+                placeholders.push("(?, ?)");
             }
 
             let query = `INSERT INTO users(name, email) VALUES ${placeholders.join(
                 ", "
             )}`;
-            await db.run(query, values); 
+            await db.run(query, values);
             console.log(`Inserted ${i + BATCH_SIZE} records...`);
         }
 
-        await db.run("COMMIT"); 
+        await db.run("COMMIT");
     } catch (error) {
         console.error("Insert Error:", error);
-        await db.run("ROLLBACK"); 
+        await db.run("ROLLBACK");
     } finally {
-        await db.close(); 
+        await db.close();
     }
 
     let endTime = performance.now();
@@ -115,9 +115,9 @@ async function createProject(numOfProjects) {
     await db.run("PRAGMA journal_mode = WAL;");
     await db.run("PRAGMA synchronous = OFF;");
 
-    let startTime = performance.now(); 
+    let startTime = performance.now();
     try {
-        await db.run("BEGIN TRANSACTION"); 
+        await db.run("BEGIN TRANSACTION");
         const colors = [
             "Red",
             "Green",
@@ -136,7 +136,6 @@ async function createProject(numOfProjects) {
             "Gold",
         ];
 
-
         for (let i = 0; i < numOfProjects; i += BATCH_SIZE) {
             let values = [];
             let placeholders = [];
@@ -147,22 +146,22 @@ async function createProject(numOfProjects) {
                 let is_favorite = (i + j + 1) % 2 == 0;
                 let user_id = Math.floor(Math.random() * 1000 + 1);
                 values.push(name, color, is_favorite, user_id);
-                placeholders.push("(?, ?, ?, ?)"); 
+                placeholders.push("(?, ?, ?, ?)");
             }
 
             let query = `INSERT INTO projects(name, color,is_favorite,user_id) VALUES ${placeholders.join(
                 ", "
             )}`;
-            await db.run(query, values); 
+            await db.run(query, values);
             console.log(`Inserted ${i + BATCH_SIZE} records...`);
         }
 
-        await db.run("COMMIT"); 
+        await db.run("COMMIT");
     } catch (error) {
         console.error("Insert Error:", error);
-        await db.run("ROLLBACK"); 
+        await db.run("ROLLBACK");
     } finally {
-        await db.close(); 
+        await db.close();
     }
 
     let endTime = performance.now();
@@ -175,3 +174,65 @@ async function createProject(numOfProjects) {
 // setTimeout(async ()=>{
 //     await createProject(1000000);
 // },1000);
+
+async function createTasks(numOfTasks) {
+    const db = await openDb();
+
+    await db.run("PRAGMA journal_mode = WAL;");
+    await db.run("PRAGMA synchronous = OFF;");
+
+    let startTime = performance.now();
+    try {
+        await db.run("BEGIN TRANSACTION");
+        for (let i = 0; i < numOfTasks; i += BATCH_SIZE) {
+            let values = [];
+            let placeholders = [];
+            // id INTEGER PRIMARY KEY AUTOINCREMENT,
+            // content VARCHAR(255) NOT NULL,
+            // description VARCHAR(255) NOT NULL,
+            // due_date TEXT NOT NULL,
+            // is_completed INTEGER DEFAULT 0,
+            // created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            // project_id INTEGER,
+            for (let j = 0; j < BATCH_SIZE && i + j < numOfTasks; j++) {
+                let content = `content${i + j + 1}`;
+                let description = "description${i + j + 1}";
+                let month = Math.floor(Math.random() * 12 + 1);
+                let date =
+                    month === 2
+                        ? Math.floor(Math.random() * 28 + 1)
+                        : Math.floor(Math.random() * 30 + 1);
+                let due_date = `2025-${month + "".padStart(2, 0)}-${
+                    date + "".padStart(2, 0)
+                }`;
+                let is_completed = (i + j + 1) % 2 == 0;
+                let project_id = Math.floor(Math.random() * 1000000 + 1);
+                values.push(
+                    content,
+                    description,
+                    due_date,
+                    is_completed,
+                    project_id
+                );
+                placeholders.push("(?, ?, ?, ?, ?)");
+            }
+
+            let query = `INSERT INTO tasks(content, description, due_date, is_completed, project_id) VALUES ${placeholders.join(
+                ", "
+            )}`;
+            await db.run(query, values);
+            console.log(`Inserted ${i + BATCH_SIZE} records...`);
+        }
+
+        await db.run("COMMIT");
+    } catch (error) {
+        console.error("Insert Error:", error);
+        await db.run("ROLLBACK");
+    } finally {
+        await db.close();
+    }
+
+    let endTime = performance.now();
+    console.log(`Execution time: ${(endTime - startTime).toFixed(2)} ms`);
+}
+// createTasks(10000000)
