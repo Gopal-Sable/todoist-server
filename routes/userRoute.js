@@ -4,7 +4,7 @@ import {
     deleteUser,
     getUsers,
     login,
-    // updateUser,
+    updateUser,
 } from "../controllers/usersController.js";
 import authToken from "../middleware/authToken.js";
 
@@ -18,7 +18,7 @@ usersRoute.get("/:id", getUsers);
 // Create user
 usersRoute.post("/", createUser);
 // // update user by id
-// usersRoute.put("/:id", updateUser);
+usersRoute.patch("/:id", updateUser);
 // delete user by id
 usersRoute.delete("/:id", deleteUser);
 export { usersRoute };

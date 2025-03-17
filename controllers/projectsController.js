@@ -12,7 +12,7 @@ const createProject = async (req, res) => {
             name,
             color,
             is_favorite,
-            id: req.user.id,
+            // id: req.user.id,
         });
 
         res.status(201).json({ message: "Project created successfully" });
@@ -34,7 +34,7 @@ const getProjects = async (req, res) => {
         const limit = Number(req.query.limit);
 
         const projects = await ProjectModel.getProjects({
-            user_id: req.user.id,
+            // user_id: req.user.id,
             id,
             page: Number.isInteger(page) && page > 0 ? page : 1,
             limit: Number.isInteger(limit) && limit > 0 ? limit : 100,

@@ -43,13 +43,14 @@ const CommentModel = {
         };
     },
 
-    async deleteComment(id = null) {
+    async deleteComment(id) {
+
+        if (!Number.isInteger(Number(id))) throw new Error("Invalid comment ID");
+        
         let sql = "DELETE FROM comments WHERE id=?";
 
-        if (Number.isInteger(Number(id))) throw new Error("Invalid comment ID");
-
         const result = await db.run(sql, [id]);
-        return result.changes > 0;
+        return result;
     },
     async updateComment(id, { content }) {
         if (!content) return false;

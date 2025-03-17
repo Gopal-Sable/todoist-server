@@ -14,7 +14,7 @@ projectsRoutes.get("/:id", getProjects);
 // create a new project
 projectsRoutes.post("/", createProject);
 // update project by id
-projectsRoutes.put("/:id", updateProject);
+projectsRoutes.patch("/:id", updateProject);
 // delete all projects
 projectsRoutes.delete("/", deleteProject);
 // delete project by id

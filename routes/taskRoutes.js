@@ -14,7 +14,7 @@ tasksRoutes.get("/:id", getTasks);
 //Create task
 tasksRoutes.post("/", createTask);
 //  update task by id
-tasksRoutes.put("/:id", updateTask);
+tasksRoutes.patch("/:id", updateTask);
 // delete task by id
 tasksRoutes.delete("/:id", deleteTask);
 export { tasksRoutes };

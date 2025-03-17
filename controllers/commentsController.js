@@ -57,6 +57,9 @@ const updateComment = async (req, res) => {
 const deleteComment = async (req, res) => {
     let id = req.params.id;
     try {
+        if (!Number.isInteger(Number(id))) {
+            res.status(400).json({ message: "Invalid Id" });
+        }
         let result = await CommentModel.deleteComment(id);
         if (result.length === 0) {
             return res.status(404).json({ message: "Id not found" });

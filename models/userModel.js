@@ -56,7 +56,7 @@ const User = {
     },
     async getUsersById(id) {
         if (Number.isInteger(Number(id))) {
-            let sql = "SELECT * FROM users WHERE id = ?";
+            let sql = "SELECT id,name,email FROM users WHERE id = ?";
             return await db.get(sql, [id]);
         } else {
             return { message: "Invalid id" };
@@ -65,7 +65,7 @@ const User = {
 
     // Update Task by id
     async update(id, fields) {
-        const allowedFields = ["name", "email", "password"];
+        const allowedFields = ["name", "email"];
         const updates = Object.keys(fields)
             .filter((key) => allowedFields.includes(key))
             .map((key) => `${key} = ?`);

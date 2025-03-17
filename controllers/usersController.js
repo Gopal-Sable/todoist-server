@@ -21,8 +21,7 @@ const createUser = async (req, res) => {
         if (err.errno === 19) {
             return res.status(404).json({ error: "Email already exists" });
         }
-        // return res.status(500).json({ error: "Server error" });
-        return res.status(500).json(err);
+        return res.status(500).json({ error: "Server error" });
     }
 };
 
@@ -100,6 +99,9 @@ const updateUser = async (req, res) => {
 
         return res.json({ message: "User updated successfully" });
     } catch (err) {
+        if (err.errno===19) {
+            return res.status(404).json({ error: "Email already exists" });
+        }
         return res.status(500).json({ error: "Server error" });
     }
 };

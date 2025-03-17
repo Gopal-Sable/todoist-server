@@ -3,6 +3,7 @@ import {
     createComment,
     deleteComment,
     getAllComments,
+    updateComment,
 } from "../controllers/commentsController.js";
 
 const commentRoute = Router();
@@ -11,4 +12,5 @@ commentRoute.post("/", createComment);
 commentRoute.get("/", getAllComments);
 commentRoute.get("/:id", getAllComments);
 commentRoute.delete("/:id", deleteComment);
+commentRoute.patch("/:id", updateComment);
 export { commentRoute };
