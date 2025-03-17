@@ -61,6 +61,7 @@ export async function createTable() {
         await db.run(userTable);
         await db.run(projectsTable);
         await db.run(tasksTable);
+        await db.run(comments)
         console.log("Tables created successfully");
     } catch (error) {
         console.error("Error creating tables:", error.message);

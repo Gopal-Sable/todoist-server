@@ -10,16 +10,16 @@ const createUser = async (req, res) => {
         if (!name || !email || !regex.test(email)) {
             return res.status(400).json({ message: "All fields are required" });
         }
-        await User.createUser({ name, email });
+        let user = await User.createUser({ name, email });
         res.status(201).json({
-            message: "User created successfully",
-            result,
+            message: "User created successfully"
         });
     } catch (err) {
         if (err.errno === 19) {
             return res.status(404).json({ error: "Email already exists" });
         }
-        return res.status(500).json({ error: "Server error" });
+        // return res.status(500).json({ error: "Server error" });
+        return res.status(500).json(err);
     }
 };
 
@@ -99,9 +99,9 @@ const deleteUser = async (req, res) => {
         }
 
         let result = await User.deleteUser(id);
-        // if (result.changes === 0) {
-        //     return res.status(404).json({ message: "User not found" });
-        // }
+        if (result.changes === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
 
         return res.status(200).json({ message: "User deleted successfully" });
     } catch (err) {
