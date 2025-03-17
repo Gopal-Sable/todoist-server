@@ -1,108 +1,93 @@
-import openDb from "../db/db.js";
-const db = await openDb();
+import ProjectModel from "../models/projectModel.js";
 
-// Create project
-const createProject = async (req, res, next) => {
+// Create a new project
+const createProject = async (req, res) => {
     try {
-        const { name, color } = req.body;
+        const { name, color, is_favorite } = req.body;
         if (!name || !color) {
             return res.status(400).json({ message: "Provide inputs" });
         }
 
-        let sql =
-            "INSERT INTO projects (name, color, is_favorite) values (?,?,?)";
-        const project = await db.run(sql, [
-            name,
-            color,
-            req.body.is_favorite || false,
-        ]);
-        return res
-            .status(200)
-            .json({ message: "Project created successfully" });
+        await ProjectModel.createProject({ name, color, is_favorite });
+
+        res.status(201).json({ message: "Project created successfully" });
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
 };
 
-// get all project or specified id
-const getProjects = async (req, res, next) => {
+// Get all projects or a specific project by ID
+const getProjects = async (req, res) => {
     try {
-        let page = Number(req.query.page) || 1;
-        let limit = Number(req.query.limit) || 100;
-        if (!Number.isInteger(page) || page < 1) {
-            page = 1;
-        }
-        if (!Number.isInteger(limit) || limit < 1 || limit > 10000) {
-            limit = 100;
+        const id = req.params.id ? parseInt(req.params.id, 10) : null;
+
+        if (id && isNaN(id)) {
+            return res.status(400).json({ message: "Invalid project ID" });
         }
 
-        let sql = "SELECT * FROM projects";
-        let rowCountQuery = "SELECT COUNT(*) as rowCount FROM projects";
-        if (req.params.id) {
-            if (isNaN(req.params.id)) {
-                return res.status(400).json({ message: "Invalid task ID" });
-            }
-            sql += " WHERE id=?";
-            // rowCountQuery += " WHERE id=?";
-        }
-        sql += ` limit ${limit} offset ${(page - 1) * limit}`;
+        const page = Number(req.query.page);
+        const limit = Number(req.query.limit);
 
-        const rowCount = await db.get(rowCountQuery);
-        const projects = await db.all(sql, [req.params.id]);
-        if (req.params.id && projects.length === 0) {
+        const projects = await ProjectModel.getProjects({
+            id,
+            page: Number.isInteger(page) && page > 0 ? page : 1,
+            limit: Number.isInteger(limit) && limit > 0 ? limit : 100,
+        });
+
+        if (id && !projects) {
             return res.status(404).json({ message: "Project not found" });
         }
-        return res.status(200).json({
-            totalRecord: rowCount.rowCount,
-            currPage: page,
-            recordsPerPage: limit,
-            pages: Math.ceil(rowCount.rowCount / limit),
-            projects,
-        });
+
+        res.status(200).json(projects);
     } catch (error) {
-        res.status(500).json(error);
+        console.error("Error fetching projects:", error);
+        res.status(500).json({ error: "Server error" });
     }
 };
 
-// update project by id
-const updateProject = async (req, res, next) => {
+
+// Update project by ID
+const updateProject = async (req, res) => {
     try {
         const { name, color, is_favorite } = req.body;
-        const id = req.params.id;
+        const id = Number(req.params.id);
+
         if (!name || !color || is_favorite == null) {
             return res.status(400).json({ message: "Provide inputs" });
         }
-        let sql =
-            "UPDATE projects SET name=?, color=?, is_favorite=? WHERE id=?";
 
-        const project = await db.run(sql, [name, color, is_favorite, id]);
-        if (project.changes === 0) {
-            return res.status(400).json({ message: "Id not found" });
+        const updated = await ProjectModel.updateProject(id, {
+            name,
+            color,
+            is_favorite,
+        });
+
+        if (!updated) {
+            return res.status(404).json({ message: "Project not found" });
         }
-        return res
-            .status(200)
-            .json({ message: "Project updated successfully" });
+
+        res.status(200).json({ message: "Project updated successfully" });
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
 };
 
-// delete all project or by id
-const deleteProject = async (req, res, next) => {
+// Delete all projects or a project by ID
+const deleteProject = async (req, res) => {
     try {
-        const id = req.params.id;
-        let sql = "DELETE FROM projects";
-        if (id) {
-            if (isNaN(id)) {
-                return res.status(400).json({ message: "Invalid task ID" });
-            }
-            sql += " WHERE id=?";
+        const id = req.params.id ? Number(req.params.id) : null;
+
+        if (id && isNaN(id)) {
+            return res.status(400).json({ message: "Invalid project ID" });
         }
-        const project = await db.run(sql, [id]);
-        if (project.changes === 0) {
+
+        const deleted = await ProjectModel.deleteProject(id);
+
+        if (!deleted) {
             return res.status(404).json({ message: "Project not found" });
         }
-        res.status(200).json({ message: "Project deleted succefully" });
+
+        res.status(200).json({ message: "Project deleted successfully" });
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
