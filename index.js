@@ -1,11 +1,13 @@
 import express from "express";
+
 import { createTable } from "./db/db.js";
 import { projectsRoutes } from "./routes/projectsRoute.js";
 import { tasksRoutes } from "./routes/taskRoutes.js";
 import { usersRoute } from "./routes/userRoute.js";
 import { commentRoute } from "./routes/commentsRoute.js";
+import { configDotenv } from "dotenv";
 createTable();
-
+configDotenv()
 const app = express();
 const PORT = process.env.PORT || 8000;
 app.use(express.json());

@@ -3,14 +3,18 @@ import {
     createUser,
     deleteUser,
     getUsers,
+    login,
     // updateUser,
 } from "../controllers/usersController.js";
+import authToken from "../middleware/authToken.js";
 
 const usersRoute = Router();
 // fetch all users
-usersRoute.get("/", getUsers);
+usersRoute.get("/", authToken, getUsers);
+usersRoute.get("/login", login);
+
 // fetch user by id
-usersRoute.get("/:id", getUsers);
+usersRoute.get("/:id", authToken, getUsers);
 // Create user
 usersRoute.post("/", createUser);
 // // update user by id

@@ -1,9 +1,25 @@
-import { getUsers } from "../controllers/usersController.js";
+import jwt from "jsonwebtoken";
 import openDb from "../db/db.js";
-
+import bcrypt from "bcrypt";
+import { configDotenv } from "dotenv";
+configDotenv();
+const JWT_SECRETE = process.env.JWT_SECRETEKEY;
 const db = await openDb();
 
 const User = {
+    async login({ email, password }) {
+        let sql = "select id, name, password from users where email = ?";
+        const user = await db.get(sql, [email]);
+        if (user === null) {
+            return { message: "Email not exist" };
+        }
+        let match = await bcrypt.compare(password, user.password);
+        if (match) {
+            return { token: jwt.sign(user, JWT_SECRETE) };
+        } else {
+            return { message: "Invalid Credentials" };
+        }
+    },
     async createUser({ name, email }) {
         let sql = `INSERT INTO users (name,email) VALUES (?, ?)`;
         const result = await db.run(sql, [name, email]);
@@ -13,7 +29,7 @@ const User = {
     //  Get all users or by id
     async getUsers({ limit, page }) {
         let reqArr = [];
-        let sql = "SELECT * FROM users";
+        let sql = "SELECT id, name, email FROM users";
         let countQuery = "SELECT COUNT(*) as totalUser FROM users";
         limit = Number(limit) || 100;
         page = Number(page) || 1;
@@ -24,9 +40,6 @@ const User = {
         if (!Number.isInteger(limit) || limit > 10000 || limit < 1) {
             limit = 100;
         }
-
-        // Create a separate array for countQuery to avoid excess parameters
-
         const count = await db.get(countQuery, reqArr);
 
         sql += " LIMIT ? OFFSET ?";

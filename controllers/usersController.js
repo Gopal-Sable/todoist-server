@@ -1,18 +1,17 @@
-// import openDb from "../db/db.js";
-
-// const db = await openDb();
+import bcrypt from "bcrypt";
 import User from "../models/userModel.js";
 // Users created
 const createUser = async (req, res) => {
     try {
-        const { name, email } = req.body;
+        const { name, email, password } = req.body;
         const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (!name || !email || !regex.test(email)) {
+        if (!name || !email || !regex.test(email) || !password) {
             return res.status(400).json({ message: "All fields are required" });
         }
-        let user = await User.createUser({ name, email });
+        let passwordHash = await bcrypt.hash(password, 10);
+        let user = await User.createUser({ name, email, passwordHash });
         res.status(201).json({
-            message: "User created successfully"
+            message: "User created successfully",
         });
     } catch (err) {
         if (err.errno === 19) {
@@ -21,6 +20,12 @@ const createUser = async (req, res) => {
         // return res.status(500).json({ error: "Server error" });
         return res.status(500).json(err);
     }
+};
+
+const login = async (req, res) => {
+    const { email, password } = req.body;
+    let result = await User.login({ email, password });
+    res.json(result);
 };
 
 //  Get all users or by id
@@ -114,4 +119,5 @@ export {
     getUsers,
     //updateUser,
     deleteUser,
+    login,
 };

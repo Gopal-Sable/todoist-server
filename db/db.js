@@ -20,7 +20,8 @@ export async function createTable() {
         CREATE TABLE IF NOT EXISTS users(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name VARCHAR(255) NOT NULL, 
-            email VARCHAR(255) UNIQUE
+            email VARCHAR(255) UNIQUE,
+            password varchar(255) NOT NULL
         )
     `;
 
@@ -61,7 +62,7 @@ export async function createTable() {
         await db.run(userTable);
         await db.run(projectsTable);
         await db.run(tasksTable);
-        await db.run(comments)
+        await db.run(comments);
         console.log("Tables created successfully");
     } catch (error) {
         console.error("Error creating tables:", error.message);

@@ -1,4 +1,5 @@
-import openDb, { createTable } from "./db";
+import openDb, { createTable } from "./db.js";
+import bcrypt from "bcrypt";
 const BATCH_SIZE = 5000;
 createTable();
 async function createUser(numOfUsers) {
@@ -7,7 +8,7 @@ async function createUser(numOfUsers) {
     await db.run("PRAGMA journal_mode = WAL;");
     await db.run("PRAGMA synchronous = OFF;");
 
-    let startTime = performance.now(); 
+    let startTime = performance.now();
 
     try {
         await db.run("BEGIN TRANSACTION");
@@ -19,11 +20,12 @@ async function createUser(numOfUsers) {
             for (let j = 0; j < BATCH_SIZE && i + j < numOfUsers; j++) {
                 let name = `user${i + j + 1}`;
                 let email = `abc${i + j + 1}@mail.com`;
-                values.push(name, email);
-                placeholders.push("(?, ?)");
+                let password = await bcrypt.hash(`abcd${i + j + 1}`, 10);
+                values.push(name, email, password);
+                placeholders.push("(?, ?, ?)");
             }
 
-            let query = `INSERT INTO users(name, email) VALUES ${placeholders.join(
+            let query = `INSERT INTO users(name, email, password) VALUES ${placeholders.join(
                 ", "
             )}`;
             await db.run(query, values);
@@ -161,4 +163,4 @@ async function createTasks(numOfTasks) {
     let endTime = performance.now();
     console.log(`Execution time: ${(endTime - startTime).toFixed(2)} ms`);
 }
-createTasks(10000000)
+createTasks(10000000);
