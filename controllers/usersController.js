@@ -9,7 +9,11 @@ const createUser = async (req, res) => {
             return res.status(400).json({ message: "All fields are required" });
         }
         let passwordHash = await bcrypt.hash(password, 10);
-        let user = await User.createUser({ name, email, passwordHash });
+        let user = await User.createUser({
+            name,
+            email,
+            password: passwordHash,
+        });
         res.status(201).json({
             message: "User created successfully",
         });
@@ -56,44 +60,6 @@ const getUsers = async (req, res) => {
     }
 };
 
-// Update Task by id
-// const updateTask = async (req, res) => {
-//     try {
-//         const { content, description, due_date, is_completed } = req.body;
-//         const id = req.params.id;
-
-//         if (
-//             !content ||
-//             !description ||
-//             !due_date ||
-//             is_completed === undefined
-//         ) {
-//             return res.status(400).json({ message: "All fields are required" });
-//         }
-
-//         if (isNaN(id)) {
-//             return res.status(400).json({ message: "Invalid task ID" });
-//         }
-
-//         let sql = `UPDATE tasks SET content = ?, description = ?, due_date = ?, is_completed = ? WHERE id = ?`;
-//         const result = await db.run(sql, [
-//             content,
-//             description,
-//             due_date,
-//             is_completed,
-//             id,
-//         ]);
-
-//         if (result.changes === 0) {
-//             return res.status(404).json({ message: "Task not found" });
-//         }
-
-//         return res.json({ message: "Task updated successfully" });
-//     } catch (err) {
-//         return res.status(500).json({ error: "Server error" });
-//     }
-// };
-
 // // Delete user by id
 const deleteUser = async (req, res) => {
     try {
@@ -114,10 +80,34 @@ const deleteUser = async (req, res) => {
     }
 };
 
+const updateUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (isNaN(id)) {
+            return res.status(400).json({ message: "Invalid user ID" });
+        }
+
+        if (Object.keys(req.body).length === 0) {
+            return res.status(400).json({ message: "No fields provided for update" });
+        }
+
+        const result = await User.update(id, req.body);
+
+        if (!result) {
+            return res.status(404).json({ message: "User not found or no valid fields provided" });
+        }
+
+        return res.json({ message: "User updated successfully" });
+    } catch (err) {
+        return res.status(500).json({ error: "Server error" });
+    }
+};
+
 export {
     createUser,
     getUsers,
-    //updateUser,
+    updateUser,
     deleteUser,
     login,
 };

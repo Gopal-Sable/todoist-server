@@ -8,7 +8,12 @@ const createProject = async (req, res) => {
             return res.status(400).json({ message: "Provide inputs" });
         }
 
-        await ProjectModel.createProject({ name, color, is_favorite });
+        await ProjectModel.createProject({
+            name,
+            color,
+            is_favorite,
+            id: req.user.id,
+        });
 
         res.status(201).json({ message: "Project created successfully" });
     } catch (error) {
@@ -29,6 +34,7 @@ const getProjects = async (req, res) => {
         const limit = Number(req.query.limit);
 
         const projects = await ProjectModel.getProjects({
+            user_id: req.user.id,
             id,
             page: Number.isInteger(page) && page > 0 ? page : 1,
             limit: Number.isInteger(limit) && limit > 0 ? limit : 100,
@@ -45,32 +51,38 @@ const getProjects = async (req, res) => {
     }
 };
 
-
 // Update project by ID
 const updateProject = async (req, res) => {
     try {
         const { name, color, is_favorite } = req.body;
         const id = Number(req.params.id);
 
-        if (!name || !color || is_favorite == null) {
-            return res.status(400).json({ message: "Provide inputs" });
+        if (isNaN(id)) {
+            return res.status(400).json({ message: "Invalid project ID" });
         }
 
-        const updated = await ProjectModel.updateProject(id, {
-            name,
-            color,
-            is_favorite,
-        });
+        // Build the update object dynamically
+        const updateFields = {};
+        if (name !== undefined) updateFields.name = name;
+        if (color !== undefined) updateFields.color = color;
+        if (is_favorite !== undefined) updateFields.is_favorite = is_favorite;
+
+        if (Object.keys(updateFields).length === 0) {
+            return res.status(400).json({ message: "Provide at least one field to update" });
+        }
+
+        const updated = await ProjectModel.updateProject(id, updateFields);
 
         if (!updated) {
             return res.status(404).json({ message: "Project not found" });
         }
 
-        res.status(200).json({ message: "Project updated successfully" });
+        res.status(200).json({ message: "Project updated successfully", updatedFields: updateFields });
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
 };
+
 
 // Delete all projects or a project by ID
 const deleteProject = async (req, res) => {

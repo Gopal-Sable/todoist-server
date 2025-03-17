@@ -42,24 +42,21 @@ const CommentModel = {
             comments,
         };
     },
-    // async updateComment(id, { name, color, is_favorite }) {
-    //     const sql =
-    //         "UPDATE comments SET name=?, color=?, is_favorite=? WHERE id=?";
-    //     const result = await db.run(sql, [name, color, is_favorite, id]);
-    //     return result.changes > 0;
-    // },
 
     async deleteComment(id = null) {
-        let sql = "DELETE FROM comments";
-        let params = [];
+        let sql = "DELETE FROM comments WHERE id=?";
 
-        if (id) {
-            if (isNaN(id)) throw new Error("Invalid comment ID");
-            sql += " WHERE id=?";
-            params.push(id);
-        }
+        if (Number.isInteger(Number(id))) throw new Error("Invalid comment ID");
 
-        const result = await db.run(sql, params);
+        const result = await db.run(sql, [id]);
+        return result.changes > 0;
+    },
+    async updateComment(id, { content }) {
+        if (!content) return false;
+
+        const sql = `UPDATE comments SET content = ? WHERE id = ?`;
+        const result = await db.run(sql, [content, id]);
+
         return result.changes > 0;
     },
 };

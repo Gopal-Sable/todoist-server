@@ -20,7 +20,6 @@ const Task = {
             queryParams.push(`%${filters.due_date}%`);
         }
         if (filters.is_completed !== undefined) {
-            // Allow boolean false
             conditions.push(`is_completed = ?`);
             queryParams.push(filters.is_completed);
         }
@@ -36,7 +35,6 @@ const Task = {
 
         const count = await db.get(countQuery, queryParams);
 
-        // Apply pagination
         sql += ` LIMIT ? OFFSET ?`;
         queryParams.push(limit, (page - 1) * limit);
 
@@ -55,18 +53,36 @@ const Task = {
         return await db.get(sql, [id]);
     },
 
-    async update(id, { content, description, due_date, is_completed }) {
-        const sql = `UPDATE tasks SET content=?, description=?, due_date=?, is_completed=? WHERE id=?`;
-        return await db.run(sql, [
-            content,
-            description,
-            due_date,
-            is_completed,
-            id,
-        ]);
-    },
+    async update(id, fields) {
+        const allowedFields = [
+            "content",
+            "description",
+            "due_date",
+            "is_completed",
+        ];
+        const updates = Object.keys(fields)
+            .filter((key) => allowedFields.includes(key))
+            .map((key) => `${key} = ?`);
 
+        if (updates.length === 0) {
+            return false;
+        }
+
+        const sql = `UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`;
+        const values = Object.values(fields).filter((_, index) =>
+            allowedFields.includes(Object.keys(fields)[index])
+        );
+        values.push(id);
+
+        const result = await db.run(sql, values);
+        return result.changes > 0;
+    },
     async delete(id) {
+        if (!Number.isInteger(Number(id))) {
+            return {
+                message: "Invalid id",
+            };
+        }
         const sql = `DELETE FROM tasks WHERE id=?`;
         return await db.run(sql, [id]);
     },

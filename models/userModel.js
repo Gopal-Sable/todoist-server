@@ -20,9 +20,9 @@ const User = {
             return { message: "Invalid Credentials" };
         }
     },
-    async createUser({ name, email }) {
-        let sql = `INSERT INTO users (name,email) VALUES (?, ?)`;
-        const result = await db.run(sql, [name, email]);
+    async createUser({ name, email, password }) {
+        let sql = `INSERT INTO users (name,email,password) VALUES (?, ?, ?)`;
+        const result = await db.run(sql, [name, email, password]);
         return result;
     },
 
@@ -64,42 +64,25 @@ const User = {
     },
 
     // Update Task by id
-    // const updateTask = async (req, res) => {
-    //     try {
-    //         const { content, description, due_date, is_completed } = req.body;
-    //         const id = req.params.id;
+    async update(id, fields) {
+        const allowedFields = ["name", "email", "password"];
+        const updates = Object.keys(fields)
+            .filter((key) => allowedFields.includes(key))
+            .map((key) => `${key} = ?`);
 
-    //         if (
-    //             !content ||
-    //             !description ||
-    //             !due_date ||
-    //             is_completed === undefined
-    //         ) {
-    //             return res.status(400).json({ message: "All fields are required" });
-    //         }
+        if (updates.length === 0) {
+            return false;
+        }
 
-    //         if (isNaN(id)) {
-    //             return res.status(400).json({ message: "Invalid task ID" });
-    //         }
+        const sql = `UPDATE users SET ${updates.join(", ")} WHERE id = ?`;
+        const values = Object.values(fields).filter((_, index) =>
+            allowedFields.includes(Object.keys(fields)[index])
+        );
+        values.push(id);
 
-    //         let sql = `UPDATE tasks SET content = ?, description = ?, due_date = ?, is_completed = ? WHERE id = ?`;
-    //         const result = await db.run(sql, [
-    //             content,
-    //             description,
-    //             due_date,
-    //             is_completed,
-    //             id,
-    //         ]);
-
-    //         if (result.changes === 0) {
-    //             return res.status(404).json({ message: "Task not found" });
-    //         }
-
-    //         return res.json({ message: "Task updated successfully" });
-    //     } catch (err) {
-    //         return res.status(500).json({ error: "Server error" });
-    //     }
-    // };
+        const result = await db.run(sql, values);
+        return result.changes > 0;
+    },
 
     // // Delete user by id
     async deleteUser(id) {

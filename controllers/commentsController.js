@@ -19,12 +19,36 @@ const getAllComments = async (req, res) => {
     let limit = req.query.limit;
     let page = req.query.page;
     try {
-    let result = await CommentModel.getComments({ id, page, limit });
-    if (id && result == null) {
-        return res.status(404).json({ message: "Id not found" });
+        let result = await CommentModel.getComments({ id, page, limit });
+        if (id && result == null) {
+            return res.status(404).json({ message: "Id not found" });
+        }
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: "Server error" });
     }
-    res.json(result);
-   
+};
+
+const updateComment = async (req, res) => {
+    const id = req.params.id;
+    const { content } = req.body;
+
+    if (!id || isNaN(id)) {
+        return res.status(400).json({ message: "Invalid comment ID" });
+    }
+
+    if (!content) {
+        return res.status(400).json({ message: "Content is required" });
+    }
+
+    try {
+        const updated = await CommentModel.updateComment(id, { content });
+
+        if (!updated) {
+            return res.status(404).json({ message: "Comment not found" });
+        }
+
+        res.status(200).json({ message: "Comment updated successfully" });
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
@@ -43,4 +67,4 @@ const deleteComment = async (req, res) => {
     }
 };
 
-export { createComment, getAllComments, deleteComment };
+export { createComment, getAllComments, deleteComment, updateComment };

@@ -6,12 +6,13 @@ import { tasksRoutes } from "./routes/taskRoutes.js";
 import { usersRoute } from "./routes/userRoute.js";
 import { commentRoute } from "./routes/commentsRoute.js";
 import { configDotenv } from "dotenv";
+import authHandler from "./middleware/authToken.js";
 createTable();
-configDotenv()
+configDotenv();
 const app = express();
 const PORT = process.env.PORT || 8000;
 app.use(express.json());
-app.use("/api/projects", projectsRoutes);
+app.use("/api/projects",  projectsRoutes);
 app.use("/api/tasks", tasksRoutes);
 app.use("/api/users", usersRoute);
 app.use("/api/comment", commentRoute);

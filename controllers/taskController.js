@@ -30,16 +30,20 @@ const getTasks = async (req, res) => {
         });
         return res.status(200).json(tasks);
     } catch (err) {
-        // return res.status(500).json({ error: "Server error" });
-        return res.json(err);
+        return res.status(500).json({ error: "Server error" });
     }
 };
 
 const updateTask = async (req, res) => {
     try {
         const result = await Task.update(req.params.id, req.body);
-        if (result.changes === 0)
-            return res.status(404).json({ message: "Task not found" });
+        if (!result) {
+            return res
+                .status(404)
+                .json({
+                    message: "Task not found or no valid fields provided",
+                });
+        }
 
         return res.json({ message: "Task updated successfully" });
     } catch (err) {
