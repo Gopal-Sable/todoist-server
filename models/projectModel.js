@@ -13,28 +13,24 @@ const ProjectModel = {
         if (!Number.isInteger(page) || page < 1) page = 1;
         if (!Number.isInteger(limit) || limit < 1 || limit > 10000) limit = 100;
 
-        let sql = "SELECT * FROM projects ";
-        let rowCountQuery = "SELECT COUNT(*) as rowCount FROM projects ";
-        let params = [];
-        // let sql = "SELECT * FROM projects WHERE user_id= ?";
-        // let rowCountQuery =
-        //     "SELECT COUNT(*) as rowCount FROM projects WHERE user_id= ?";
-        // let params = [user_id];
+        let sql = "SELECT * FROM projects WHERE user_id= ?";
+        let rowCountQuery =
+            "SELECT COUNT(*) as rowCount FROM projects WHERE user_id= ?";
+        let params = [user_id];
 
         if (id) {
             if (!Number.isInteger(Number(id)))
                 throw new Error("Invalid project ID");
-            // sql += " id = ?";
-            sql += " where id = ?";
+            sql += " AND id = ?";
             params.push(id);
             return await db.get(sql, params);
         }
 
         // Use parameterized queries for pagination
+        const rowCount = await db.get(rowCountQuery, params);
         sql += " LIMIT ? OFFSET ?";
         params.push(limit, (page - 1) * limit);
 
-        const rowCount = await db.get(rowCountQuery);
         const projects = await db.all(sql, params);
 
         return {
@@ -45,7 +41,7 @@ const ProjectModel = {
             projects,
         };
     },
-    async updateProject(id, fields) {
+    async updateProject(id, fields, user_id) {
         const allowedFields = ["name", "color", "is_favorite"];
         const updates = Object.keys(fields)
             .filter((key) => allowedFields.includes(key))
@@ -55,23 +51,23 @@ const ProjectModel = {
             return false;
         }
 
-        const sql = `UPDATE projects SET ${updates.join(", ")} WHERE id = ?`;
+        const sql = `UPDATE projects SET ${updates.join(", ")} WHERE id = ? AND user_id = ?`;
         const values = Object.values(fields).filter((_, index) =>
             allowedFields.includes(Object.keys(fields)[index])
         );
-        values.push(id);
+        values.push(id, user_id);
 
         const result = await db.run(sql, values);
         return result.changes > 0;
     },
-    async deleteProject(id = null) {
+    async deleteProject({id = null, user_id}) {
         let sql = "DELETE FROM projects";
         let params = [];
 
         if (id) {
             if (isNaN(id)) throw new Error("Invalid project ID");
-            sql += " WHERE id=?";
-            params.push(id);
+            sql += " WHERE id=? AND user_id=?";
+            params.push(id, user_id);
         }
 
         const result = await db.run(sql, params);

@@ -12,7 +12,7 @@ const createProject = async (req, res) => {
             name,
             color,
             is_favorite,
-            // id: req.user.id,
+            user_id: req.user.id,
         });
 
         res.status(201).json({ message: "Project created successfully" });
@@ -34,7 +34,7 @@ const getProjects = async (req, res) => {
         const limit = Number(req.query.limit);
 
         const projects = await ProjectModel.getProjects({
-            // user_id: req.user.id,
+            user_id: req.user.id,
             id,
             page: Number.isInteger(page) && page > 0 ? page : 1,
             limit: Number.isInteger(limit) && limit > 0 ? limit : 100,
@@ -68,21 +68,30 @@ const updateProject = async (req, res) => {
         if (is_favorite !== undefined) updateFields.is_favorite = is_favorite;
 
         if (Object.keys(updateFields).length === 0) {
-            return res.status(400).json({ message: "Provide at least one field to update" });
+            return res
+                .status(400)
+                .json({ message: "Provide at least one field to update" });
         }
 
-        const updated = await ProjectModel.updateProject(id, updateFields);
+        let user_id = req.user.id;
+        const updated = await ProjectModel.updateProject(
+            id,
+            updateFields,
+            user_id
+        );
 
         if (!updated) {
             return res.status(404).json({ message: "Project not found" });
         }
 
-        res.status(200).json({ message: "Project updated successfully", updatedFields: updateFields });
+        res.status(200).json({
+            message: "Project updated successfully",
+            updatedFields: updateFields,
+        });
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
 };
-
 
 // Delete all projects or a project by ID
 const deleteProject = async (req, res) => {
@@ -92,8 +101,8 @@ const deleteProject = async (req, res) => {
         if (id && isNaN(id)) {
             return res.status(400).json({ message: "Invalid project ID" });
         }
-
-        const deleted = await ProjectModel.deleteProject(id);
+        let user_id = req.user.id;
+        const deleted = await ProjectModel.deleteProject(id, user_id);
 
         if (!deleted) {
             return res.status(404).json({ message: "Project not found" });

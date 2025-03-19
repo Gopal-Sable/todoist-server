@@ -12,8 +12,8 @@ configDotenv();
 const app = express();
 const PORT = process.env.PORT || 8000;
 app.use(express.json());
-app.use("/api/projects",  projectsRoutes);
-app.use("/api/tasks", tasksRoutes);
+app.use("/api/projects", authHandler, projectsRoutes);
+app.use("/api/tasks", authHandler, tasksRoutes);
 app.use("/api/users", usersRoute);
 app.use("/api/comment", commentRoute);
 app.use("/", (req, res) => {

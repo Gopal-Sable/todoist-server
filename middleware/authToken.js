@@ -14,8 +14,7 @@ const authHandler = async (req, res, next) => {
         req.user = user;
         next();
     } catch (error) {
-        res.json(error);
-        // return res.status(401).json({ message: "Authentiaction failed" });
+        return res.status(401).json({ message: "Authentiaction failed" });
     }
 };
 

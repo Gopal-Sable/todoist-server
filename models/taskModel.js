@@ -3,18 +3,34 @@ import openDb from "../db/db.js";
 const db = await openDb();
 
 const Task = {
-    async create({ content, description, due_date, project_id }) {
+    async create({ content, description, due_date, project_id, user_id }) {
+        let checkProject_id = "SELECT id FROM projects WHERE user_id=?";
+        let projectIds = await db.all(checkProject_id, [user_id]);
+        let isProjectPresent = projectIds.map((proj) => proj.id);
+        if (!isProjectPresent.includes(project_id)) {
+            return { message: "Not your project" };
+        }
+
         const sql = `INSERT INTO tasks (content, description, due_date, project_id) VALUES (?, ?, ?, ?)`;
-        return await db.run(sql, [content, description, due_date, project_id]);
+        let result = await db.run(sql, [
+            content,
+            description,
+            due_date,
+            project_id,
+        ]);
+        if (result.changes > 0) {
+            return { message: "Task inserted successfully" };
+        }
+        throw Error("Something went wrong");
     },
 
-    async getAll({ page = 1, limit = 100, filters = {} }) {
+    async getAll({ page = 1, limit = 100, filters = {}, user_id }) {
         let queryParams = [];
         let conditions = [];
 
-        let sql = `SELECT * FROM tasks`;
-        let countQuery = `SELECT COUNT(*) as totalTask FROM tasks`;
-
+        let sql = `SELECT * FROM tasks WHERE project_id IN (SELECT id FROM projects WHERE user_id = ?)`;
+        let countQuery = `SELECT COUNT(*) as totalTask FROM tasks WHERE project_id IN (SELECT id FROM projects WHERE user_id = ?)`;
+        queryParams.push(user_id);
         if (filters.due_date) {
             conditions.push(`due_date LIKE ?`);
             queryParams.push(`%${filters.due_date}%`);
@@ -29,8 +45,8 @@ const Task = {
         }
 
         if (conditions.length > 0) {
-            sql += ` WHERE ` + conditions.join(" AND ");
-            countQuery += ` WHERE ` + conditions.join(" AND ");
+            sql += " AND " + conditions.join(" AND ");
+            countQuery += " AND " + conditions.join(" AND ");
         }
 
         const count = await db.get(countQuery, queryParams);
@@ -48,12 +64,12 @@ const Task = {
             tasks,
         };
     },
-    async getById(id) {
-        const sql = `SELECT * FROM tasks WHERE id=?`;
-        return await db.get(sql, [id]);
+    async getById(id, user_id) {
+        const sql = `SELECT * FROM tasks WHERE id=? AND project_id IN (SELECT id FROM projects WHERE user_id = ?)`;
+        return await db.get(sql, [id, user_id]);
     },
 
-    async update(id, fields) {
+    async update(id, fields, user_id) {
         const allowedFields = [
             "content",
             "description",
@@ -68,23 +84,25 @@ const Task = {
             return false;
         }
 
-        const sql = `UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`;
+        const sql = `UPDATE tasks SET ${updates.join(
+            ", "
+        )} WHERE id = ? AND project_id IN (SELECT id FROM projects WHERE user_id = ?)`;
         const values = Object.values(fields).filter((_, index) =>
             allowedFields.includes(Object.keys(fields)[index])
         );
-        values.push(id);
+        values.push(id, user_id);
 
         const result = await db.run(sql, values);
         return result.changes > 0;
     },
-    async delete(id) {
+    async delete(id, user_id) {
         if (!Number.isInteger(Number(id))) {
             return {
                 message: "Invalid id",
             };
         }
-        const sql = `DELETE FROM tasks WHERE id=?`;
-        return await db.run(sql, [id]);
+        const sql = `DELETE FROM tasks WHERE id=? AND project_id IN (SELECT id FROM projects WHERE user_id = ?)`;
+        return await db.run(sql, [id, user_id]);
     },
 };
 

@@ -6,18 +6,25 @@ const createTask = async (req, res) => {
         if (!content || !description || !due_date || !project_id) {
             return res.status(400).json({ message: "All fields are required" });
         }
-
-        await Task.create({ content, description, due_date, project_id });
-        return res.status(201).json({ message: "Task created successfully" });
+        let user_id = req.user.id;
+       let result= await Task.create({
+            content,
+            description,
+            due_date,
+            project_id,
+            user_id,
+        });
+        return res.status(201).json(result);
     } catch (err) {
-        return res.status(500).json({ error: "Server error" });
+        return res.status(500).json(err);
     }
 };
 
 const getTasks = async (req, res) => {
     try {
+        let user_id = req.user.id;
         if (req.params.id) {
-            const task = await Task.getById(req.params.id);
+            const task = await Task.getById(req.params.id, user_id);
             if (!task)
                 return res.status(404).json({ message: "Task not found" });
             return res.status(200).json(task);
@@ -27,22 +34,24 @@ const getTasks = async (req, res) => {
             page: Number(req.query.page) || 1,
             limit: Number(req.query.limit) || 100,
             filters: req.query,
+            user_id,
         });
         return res.status(200).json(tasks);
     } catch (err) {
+        console.log(err);
+
         return res.status(500).json({ error: "Server error" });
     }
 };
 
 const updateTask = async (req, res) => {
     try {
-        const result = await Task.update(req.params.id, req.body);
+        let user_id = req.user.id;
+        const result = await Task.update(req.params.id, req.body, user_id);
         if (!result) {
-            return res
-                .status(404)
-                .json({
-                    message: "Task not found or no valid fields provided",
-                });
+            return res.status(404).json({
+                message: "Task not found or no valid fields provided",
+            });
         }
 
         return res.json({ message: "Task updated successfully" });
@@ -53,7 +62,8 @@ const updateTask = async (req, res) => {
 
 const deleteTask = async (req, res) => {
     try {
-        const result = await Task.delete(req.params.id);
+        let user_id = req.user.id;
+        const result = await Task.delete(req.params.id, user_id);
         if (result.changes === 0)
             return res.status(404).json({ message: "Task not found" });
 

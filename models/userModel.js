@@ -86,8 +86,40 @@ const User = {
 
     // // Delete user by id
     async deleteUser(id) {
-        let sql = "DELETE FROM users WHERE id=?";
-        return await db.run(sql, [id]);
+        try {
+            await db.run("BEGIN TRANSACTION");
+            // let sql = "DELETE FROM users WHERE id=?";
+            let sql1 = `DELETE FROM comments 
+            WHERE task_id IN (
+                    SELECT id FROM tasks WHERE project_id IN 
+                        (
+                            SELECT id FROM projects WHERE user_id = ?
+                        )
+                    )
+            OR project_id IN (SELECT id FROM projects WHERE user_id = ?);
+
+            `;
+            let sql2 = `DELETE FROM tasks 
+            WHERE project_id IN (SELECT id FROM projects WHERE user_id = ?);
+            `;
+            let sql3 = `DELETE FROM projects 
+            WHERE user_id = ?;
+
+             `;
+            let sql4 = `DELETE FROM users WHERE id=?`;
+
+            // await db.run(sql1, [id]);
+            await db.run(sql2, [id]);
+            await db.run(sql3, [id]);
+            await db.run(sql4, [id]);
+            await db.run("COMMIT");
+            return result;
+        } catch (error) {
+            await db.run("ROLLBACK");
+            console.log(error);
+
+            return error;
+        }
     },
 };
 
