@@ -1,5 +1,5 @@
 import express from "express";
-const cors = require('cors');
+import cors from "cors"
 import { createTable } from "./db/db.js";
 import { projectsRoutes } from "./routes/projectsRoute.js";
 import { tasksRoutes } from "./routes/taskRoutes.js";
@@ -7,21 +7,21 @@ import { usersRoute } from "./routes/userRoute.js";
 import { commentRoute } from "./routes/commentsRoute.js";
 import { configDotenv } from "dotenv";
 import authHandler from "./middleware/authToken.js";
+import cookieParser from "cookie-parser";
+
 createTable();
 configDotenv();
 const app = express();
 
-// Enable CORS for all origins (good for dev)
-app.use(cors());
+app.use(cookieParser());
 
-// Or more securely:
-// app.use(
-//   cors({
-//     origin: 'http://localhost:5173', // your frontend origin
-//     methods: ['GET', 'POST',],
-//     credentials: true, // if using cookies or sessions
-//   })
-// );
+app.use(
+  cors({
+    origin: 'http://localhost:5173', // your frontend origin
+    methods: ['GET', 'POST','PATCH','DELETE'],
+    credentials: true, 
+  })
+);
 
 const PORT = process.env.PORT || 8000;
 app.use(express.json());

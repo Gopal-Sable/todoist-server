@@ -27,8 +27,27 @@ const createUser = async (req, res) => {
 
 const login = async (req, res) => {
     const { email, password } = req.body;
-    let result = await User.login({ email, password });
-    res.json(result);
+
+    const result = await User.login({ email, password });
+
+    if (!result.success) {
+        return res.status(401).json(result);
+    }
+
+    // Set token in cookie
+    res.cookie("token", result.token, {
+        httpOnly: true, // Prevent JS access
+        secure: process.env.NODE_ENV === "production", // Send only over HTTPS in production
+        sameSite: "lax", // Adjust based on your frontend/backend setup
+        maxAge: 60 * 60 * 1000, // 1 hour
+    });
+
+    // Send response without token in body
+    return res.json({
+        success: true,
+        message: "Login successful",
+        user: result.user, // return non-sensitive info
+    });
 };
 
 //  Get all users or by id
@@ -96,11 +115,9 @@ const updateUser = async (req, res) => {
         const result = await User.update(id, req.body);
 
         if (!result) {
-            return res
-                .status(404)
-                .json({
-                    message: "User not found or no valid fields provided",
-                });
+            return res.status(404).json({
+                message: "User not found or no valid fields provided",
+            });
         }
 
         return res.json({ message: "User updated successfully" });

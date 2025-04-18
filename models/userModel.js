@@ -8,17 +8,32 @@ const db = await openDb();
 
 const User = {
     async login({ email, password }) {
-        let sql = "select id, name, password from users where email = ?";
+        const sql = "SELECT id, name, password FROM users WHERE email = ?";
         const user = await db.get(sql, [email]);
+
         if (!user) {
-            return { message: "Email not exist" };
+            return { success: false, message: "Email does not exist" };
         }
-        let match = await bcrypt.compare(password, user.password);
-        if (match) {
-            return { token: jwt.sign(user, JWT_SECRETE) };
-        } else {
-            return { message: "Invalid Credentials" };
+
+        const match = await bcrypt.compare(password, user.password);
+
+        if (!match) {
+            return { success: false, message: "Invalid credentials" };
         }
+
+        // Never include password in the token
+        const { password: _, ...userPayload } = user;
+
+        const token = jwt.sign(userPayload, JWT_SECRETE, {
+            expiresIn: "1h", // Optional: token expiry
+        });
+
+        return {
+            success: true,
+            message: "Login successful",
+            token,
+            user: userPayload, // Optional: return non-sensitive user info
+        };
     },
     async createUser({ name, email, password }) {
         let sql = `INSERT INTO users (name,email,password) VALUES (?, ?, ?)`;
