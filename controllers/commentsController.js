@@ -7,8 +7,8 @@ const createComment = async (req, res) => {
     }
 
     try {
-        await CommentModel.createComment({ content, project_id, task_id });
-        res.status(201).json({ message: "Commet created" });
+       const result= await CommentModel.createComment({ content, project_id, task_id });
+        res.status(201).json(result);
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
@@ -61,7 +61,7 @@ const deleteComment = async (req, res) => {
             res.status(400).json({ message: "Invalid Id" });
         }
         let result = await CommentModel.deleteComment(id);
-        if (result.length === 0) {
+        if (result.changes === 0) {
             return res.status(404).json({ message: "Id not found" });
         }
         res.status(200).json({ message: "comment deleted successfully" });

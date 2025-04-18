@@ -3,10 +3,13 @@ import openDb from "../db/db.js";
 const db = await openDb();
 
 const ProjectModel = {
-    async createProject({ name, color, user_id, is_favorite = false }) {
+    async createProject(data) {
+        const { name, color, user_id, is_favorite = false } = data;
         const sql =
             "INSERT INTO projects (name, color, is_favorite,user_id) VALUES (?, ?, ?, ?)";
-        return await db.run(sql, [name, color, is_favorite, user_id]);
+        const result = await db.run(sql, [name, color, is_favorite, user_id]);
+        result["data"] = { id: result.lastID, ...data };
+        return result.data;
     },
 
     async getProjects({ user_id, id, page = 1, limit = 100 }) {
@@ -60,7 +63,7 @@ const ProjectModel = {
         const result = await db.run(sql, values);
         return result.changes > 0;
     },
-    async deleteProject({id = null, user_id}) {
+    async deleteProject({ id = null, user_id }) {
         let sql = "DELETE FROM projects";
         let params = [];
 

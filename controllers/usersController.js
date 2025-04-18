@@ -88,28 +88,28 @@ const updateUser = async (req, res) => {
         }
 
         if (Object.keys(req.body).length === 0) {
-            return res.status(400).json({ message: "No fields provided for update" });
+            return res
+                .status(400)
+                .json({ message: "No fields provided for update" });
         }
 
         const result = await User.update(id, req.body);
 
         if (!result) {
-            return res.status(404).json({ message: "User not found or no valid fields provided" });
+            return res
+                .status(404)
+                .json({
+                    message: "User not found or no valid fields provided",
+                });
         }
 
         return res.json({ message: "User updated successfully" });
     } catch (err) {
-        if (err.errno===19) {
+        if (err.errno === 19) {
             return res.status(404).json({ error: "Email already exists" });
         }
         return res.status(500).json({ error: "Server error" });
     }
 };
 
-export {
-    createUser,
-    getUsers,
-    updateUser,
-    deleteUser,
-    login,
-};
+export { createUser, getUsers, updateUser, deleteUser, login };

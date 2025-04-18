@@ -8,14 +8,14 @@ const createProject = async (req, res) => {
             return res.status(400).json({ message: "Provide inputs" });
         }
 
-        await ProjectModel.createProject({
+        const result = await ProjectModel.createProject({
             name,
             color,
             is_favorite,
             user_id: req.user.id,
         });
 
-        res.status(201).json({ message: "Project created successfully" });
+        res.status(201).json(result);
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }

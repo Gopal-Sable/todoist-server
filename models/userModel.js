@@ -10,7 +10,7 @@ const User = {
     async login({ email, password }) {
         let sql = "select id, name, password from users where email = ?";
         const user = await db.get(sql, [email]);
-        if (user === null) {
+        if (!user) {
             return { message: "Email not exist" };
         }
         let match = await bcrypt.compare(password, user.password);

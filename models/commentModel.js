@@ -1,12 +1,19 @@
 import openDb from "../db/db.js";
+import getFormattedTimestamp from "../middleware/getFormattedTimestamp.js";
 
 const db = await openDb();
 
 const CommentModel = {
-    async createComment({ content, project_id, task_id }) {
+    async createComment(data) {
+        const { content, project_id, task_id } = data;
         const sql =
             "INSERT INTO comments(content, project_id, task_id) VALUES (?, ?, ?)";
-        return await db.run(sql, [content, project_id, task_id]);
+        const results = await db.run(sql, [content, project_id, task_id]);
+        return {
+            ...data,
+            id: results.lastID,
+            posted_at: getFormattedTimestamp(),
+        };
     },
 
     async getComments({ id, page = 1, limit = 100 }) {
@@ -44,12 +51,12 @@ const CommentModel = {
     },
 
     async deleteComment(id) {
+        if (!Number.isInteger(Number(id)))
+            throw new Error("Invalid comment ID");
 
-        if (!Number.isInteger(Number(id))) throw new Error("Invalid comment ID");
-        
         let sql = "DELETE FROM comments WHERE id=?";
 
-        const result = await db.run(sql, [id]);
+        const result = await db.run(sql, [id]);        
         return result;
     },
     async updateComment(id, { content }) {

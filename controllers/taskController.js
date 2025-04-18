@@ -2,7 +2,7 @@ import Task from "../models/taskModel.js";
 
 const createTask = async (req, res) => {
     try {
-        const { content, description, due_date, project_id } = req.body;
+        const { content, description, due_date, project_id } = req.body;       
         if (!content || !description || !due_date || !project_id) {
             return res.status(400).json({ message: "All fields are required" });
         }

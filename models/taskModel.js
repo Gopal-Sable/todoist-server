@@ -1,9 +1,11 @@
 import openDb from "../db/db.js";
+import getFormattedTimestamp from "../middleware/getFormattedTimestamp.js";
 
 const db = await openDb();
 
 const Task = {
-    async create({ content, description, due_date, project_id, user_id }) {
+    async create(data) {
+        const { content, description, due_date, project_id, user_id } = data;
         let checkProject_id = "SELECT id FROM projects WHERE user_id=?";
         let projectIds = await db.all(checkProject_id, [user_id]);
         let isProjectPresent = projectIds.map((proj) => proj.id);
@@ -19,7 +21,12 @@ const Task = {
             project_id,
         ]);
         if (result.changes > 0) {
-            return { message: "Task inserted successfully" };
+            return {
+                ...data,
+                id: result.lastID,
+                is_completed: 0,
+                created_at: getFormattedTimestamp(),
+            };
         }
         throw Error("Something went wrong");
     },
