@@ -1,5 +1,5 @@
 import express from "express";
-import cors from "cors"
+import cors from "cors";
 import { createTable } from "./db/db.js";
 import { projectsRoutes } from "./routes/projectsRoute.js";
 import { tasksRoutes } from "./routes/taskRoutes.js";
@@ -16,11 +16,11 @@ const app = express();
 app.use(cookieParser());
 
 app.use(
-  cors({
-    origin: 'http://localhost:5173', // your frontend origin
-    methods: ['GET', 'POST','PATCH','DELETE'],
-    credentials: true, 
-  })
+    cors({
+        origin: process.env.FRONTEND_ORIGIN,
+        methods: ["GET", "POST", "PATCH", "DELETE"],
+        credentials: true,
+    })
 );
 
 const PORT = process.env.PORT || 8000;
