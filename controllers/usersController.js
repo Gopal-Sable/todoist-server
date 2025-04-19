@@ -44,6 +44,7 @@ const login = async (req, res) => {
 
     // Send response without token in body
     return res.json({
+        token: result.token,
         success: true,
         message: "Login successful",
         user: result.user, // return non-sensitive info

@@ -5,11 +5,11 @@ sqlite3.verbose();
 
 export default async function openDb() {
     const db = await open({
-        filename: "./db/TODOIST.db",
+        filename: "./db/tod.db",
         driver: sqlite3.Database,
     });
 
-    await db.exec("PRAGMA journal_mode=WAL;");
+    // await db.exec("PRAGMA journal_mode=WAL;");
     await db.run("PRAGMA foreign_keys = ON");
     return db;
 }

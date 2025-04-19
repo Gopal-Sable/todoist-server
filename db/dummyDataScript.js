@@ -5,8 +5,8 @@ createTable();
 async function createUser(numOfUsers) {
     const db = await openDb();
 
-    await db.run("PRAGMA journal_mode = WAL;");
-    await db.run("PRAGMA synchronous = OFF;");
+    // await db.run("PRAGMA journal_mode = WAL;");
+    // await db.run("PRAGMA synchronous = OFF;");
 
     let startTime = performance.now();
 
@@ -54,23 +54,24 @@ async function createProject(numOfProjects) {
     try {
         await db.run("BEGIN TRANSACTION");
         const colors = [
-            "Red",
-            "Green",
-            "Blue",
-            "Pink",
-            "Purple",
-            "Cyan",
-            "Yellow",
-            "Orange",
-            "Teal",
-            "Violet",
-            "Crimson",
-            "Lime",
-            "Olive",
-            "Navy",
-            "Gold",
+            "#F87171",
+            "#34D399",
+            "#60A5FA",
+            "#F472B6",
+            "#A78BFA",
+            "#22D3EE",
+            "#FACC15",
+            "#FB923C",
+            "#2DD4BF",
+            "#C084FC",
+            "#EF4444",
+            "#84CC16",
+            "#A3E635",
+            "#3B82F6",
+            "#FBBF24",
         ];
 
+        
         for (let i = 0; i < numOfProjects; i += BATCH_SIZE) {
             let values = [];
             let placeholders = [];
