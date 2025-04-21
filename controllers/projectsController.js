@@ -98,20 +98,24 @@ const deleteProject = async (req, res) => {
     try {
         const id = req.params.id ? Number(req.params.id) : null;
 
-        if (id && isNaN(id)) {
+        if (!id || isNaN(id)) {
             return res.status(400).json({ message: "Invalid project ID" });
         }
-        let user_id = req.user.id;
-        const deleted = await ProjectModel.deleteProject(id, user_id);
 
-        if (!deleted) {
-            return res.status(404).json({ message: "Project not found" });
+        const user_id = req.user.id;
+
+        const message = await ProjectModel.deleteProject({ id, user_id });
+
+        if (message?.notFound) {
+            return res.status(404).json({ message: "Project not found or unauthorized" });
         }
 
-        res.status(200).json({ message: "Project deleted successfully" });
+        res.status(200).json({ message: "Deleted" });
     } catch (error) {
+        console.error("Error in deleteProject controller:", error);
         res.status(500).json({ error: "Server error" });
     }
 };
+
 
 export { createProject, getProjects, updateProject, deleteProject };

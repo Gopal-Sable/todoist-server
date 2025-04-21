@@ -72,8 +72,8 @@ const Task = {
         };
     },
     async getById(id, user_id) {
-        const sql = `SELECT * FROM tasks WHERE id=? AND project_id IN (SELECT id FROM projects WHERE user_id = ?)`;
-        return await db.get(sql, [id, user_id]);
+        const sql = `SELECT * FROM tasks WHERE project_id=? AND project_id IN (SELECT id FROM projects WHERE user_id = ?)`;
+        return await db.all(sql, [id, user_id]);
     },
 
     async update(id, fields, user_id) {

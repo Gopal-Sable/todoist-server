@@ -102,40 +102,68 @@ const User = {
     // // Delete user by id
     async deleteUser(id) {
         try {
-            await db.run("BEGIN TRANSACTION");
-            // let sql = "DELETE FROM users WHERE id=?";
-            let sql1 = `DELETE FROM comments 
-            WHERE task_id IN (
-                    SELECT id FROM tasks WHERE project_id IN 
-                        (
-                            SELECT id FROM projects WHERE user_id = ?
-                        )
-                    )
-            OR project_id IN (SELECT id FROM projects WHERE user_id = ?);
+            // Step 1: Check if user exists and not already deleted
+            const user = await db.get(`SELECT * FROM users WHERE id = ?`, [id]);
+            console.log(user);
 
-            `;
-            let sql2 = `DELETE FROM tasks 
-            WHERE project_id IN (SELECT id FROM projects WHERE user_id = ?);
-            `;
-            let sql3 = `DELETE FROM projects 
-            WHERE user_id = ?;
+            if (!user) {
+                return { message: "User not found or already deleted" };
+            }
 
-             `;
-            let sql4 = `DELETE FROM users WHERE id=?`;
+            // Step 2: Mark the user as deleted (soft delete)
+            await db.run(`UPDATE users SET is_deleted = 1 WHERE id = ?`, [id]);
+            console.log("User marked as deleted.");
 
-            // await db.run(sql1, [id]);
-            await db.run(sql2, [id]);
-            await db.run(sql3, [id]);
-            await db.run(sql4, [id]);
-            await db.run("COMMIT");
-            return result;
+            // Step 3: Fire and forget background cleanup
+            deleteUserDataInBackground(id);
+
+            return { message: "Deleted" };
         } catch (error) {
-            await db.run("ROLLBACK");
-            console.log(error);
-
-            return error;
+            console.error("Failed to mark user as deleted:", error);
+            throw error;
         }
     },
 };
+
+async function deleteUserDataInBackground(id) {
+    const dbDelete = await openDb();
+    try {
+        await dbDelete.run("BEGIN TRANSACTION");
+
+        // await dbDelete.run(
+        //     `
+        //     DELETE FROM comments
+        //     WHERE task_id IN (
+        //         SELECT id FROM tasks WHERE project_id IN (
+        //             SELECT id FROM projects WHERE user_id = ?
+        //         )
+        //     ) OR project_id IN (
+        //         SELECT id FROM projects WHERE user_id = ?
+        //     )
+        // `,
+        //     [id, id]
+        // );
+        // await dbDelete.run(
+        //     `
+        //     DELETE FROM tasks
+        //     WHERE project_id IN (
+        //         SELECT id FROM projects WHERE user_id = ?
+        //     )
+        // `,
+        //     [id]
+        // );
+
+        // await dbDelete.run(`DELETE FROM projects WHERE user_id = ?`, [id]);
+
+        await dbDelete.run(`DELETE FROM users WHERE id = ?`, [id]);
+        await dbDelete.run("COMMIT");
+        console.log(`Background cleanup complete for user ${id}`);
+    } catch (error) {
+        await dbDelete.run("ROLLBACK");
+        console.error(`Error in background cleanup for user ${id}:`, error);
+    } finally {
+        dbDelete.close();
+    }
+}
 
 export default User;

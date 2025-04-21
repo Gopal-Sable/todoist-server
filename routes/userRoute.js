@@ -10,7 +10,7 @@ import authToken from "../middleware/authToken.js";
 
 const usersRoute = Router();
 // fetch all users
-usersRoute.get("/", getUsers);
+// usersRoute.get("/", getUsers);
 usersRoute.post("/login", login);
 
 // fetch user by id

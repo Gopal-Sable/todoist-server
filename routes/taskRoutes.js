@@ -10,7 +10,7 @@ const tasksRoutes = Router();
 // fetch all tasks
 tasksRoutes.get("/", getTasks);
 // fetch task by id
-tasksRoutes.get("/:id", getTasks);
+tasksRoutes.get("/project/:id", getTasks);
 //Create task
 tasksRoutes.post("/", createTask);
 //  update task by id

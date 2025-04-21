@@ -9,7 +9,9 @@ export default async function openDb() {
         driver: sqlite3.Database,
     });
 
-    // await db.exec("PRAGMA journal_mode=WAL;");
+    await db.exec("PRAGMA journal_mode = WAL;");
+    await db.exec("PRAGMA synchronous = NORMAL;");
+    await db.exec("PRAGMA busy_timeout = 5000;");
     await db.run("PRAGMA foreign_keys = ON");
     return db;
 }
@@ -21,7 +23,8 @@ export async function createTable() {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name VARCHAR(255) NOT NULL, 
             email VARCHAR(255) UNIQUE,
-            password varchar(255) NOT NULL
+            password varchar(255) NOT NULL,
+            is_deleted INTEGER DEFAULT 0
         )
     `;
 

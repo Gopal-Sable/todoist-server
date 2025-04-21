@@ -54,7 +54,9 @@ const ProjectModel = {
             return false;
         }
 
-        const sql = `UPDATE projects SET ${updates.join(", ")} WHERE id = ? AND user_id = ?`;
+        const sql = `UPDATE projects SET ${updates.join(
+            ", "
+        )} WHERE id = ? AND user_id = ?`;
         const values = Object.values(fields).filter((_, index) =>
             allowedFields.includes(Object.keys(fields)[index])
         );
@@ -64,18 +66,46 @@ const ProjectModel = {
         return result.changes > 0;
     },
     async deleteProject({ id = null, user_id }) {
-        let sql = "DELETE FROM projects";
-        let params = [];
+        try {
+            const project = await db.get(
+                `SELECT id FROM projects WHERE id = ? AND user_id = ?`,
+                [id, user_id]
+            );
 
-        if (id) {
-            if (isNaN(id)) throw new Error("Invalid project ID");
-            sql += " WHERE id=? AND user_id=?";
-            params.push(id, user_id);
+            if (!project) {
+                return { notFound: true };
+            }
+
+            // Respond immediately
+            deleteProjectDataInBackground(id); // Fire and forget
+
+            return { message: "Deleted" };
+        } catch (error) {
+            throw error;
         }
-
-        const result = await db.run(sql, params);
-        return result.changes > 0;
     },
 };
+
+async function deleteProjectDataInBackground(projectId) {
+    const dbDelete = await openDb();
+    try {
+        await dbDelete.run("BEGIN TRANSACTION");
+
+        await dbDelete.run(`DELETE FROM projects WHERE id = ?`, [projectId]);
+
+        await dbDelete.run("COMMIT");
+        console.log(
+            `Project ${projectId} and related data deleted in background`
+        );
+    } catch (error) {
+        await dbDelete.run("ROLLBACK");
+        console.error(
+            `Error during background cleanup of project ${projectId}:`,
+            error
+        );
+    } finally {
+        dbDelete.close();
+    }
+}
 
 export default ProjectModel;
