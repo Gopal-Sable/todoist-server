@@ -102,19 +102,15 @@ const User = {
     // // Delete user by id
     async deleteUser(id) {
         try {
-            // Step 1: Check if user exists and not already deleted
-            const user = await db.get(`SELECT * FROM users WHERE id = ?`, [id]);
+            const user = await db.get(`SELECT * FROM users WHERE id = ? AND is_deleted = 0`, [id]);
             console.log(user);
 
             if (!user) {
                 return { message: "User not found or already deleted" };
             }
-
-            // Step 2: Mark the user as deleted (soft delete)
             await db.run(`UPDATE users SET is_deleted = 1 WHERE id = ?`, [id]);
             console.log("User marked as deleted.");
 
-            // Step 3: Fire and forget background cleanup
             deleteUserDataInBackground(id);
 
             return { message: "Deleted" };
@@ -129,31 +125,6 @@ async function deleteUserDataInBackground(id) {
     const dbDelete = await openDb();
     try {
         await dbDelete.run("BEGIN TRANSACTION");
-
-        // await dbDelete.run(
-        //     `
-        //     DELETE FROM comments
-        //     WHERE task_id IN (
-        //         SELECT id FROM tasks WHERE project_id IN (
-        //             SELECT id FROM projects WHERE user_id = ?
-        //         )
-        //     ) OR project_id IN (
-        //         SELECT id FROM projects WHERE user_id = ?
-        //     )
-        // `,
-        //     [id, id]
-        // );
-        // await dbDelete.run(
-        //     `
-        //     DELETE FROM tasks
-        //     WHERE project_id IN (
-        //         SELECT id FROM projects WHERE user_id = ?
-        //     )
-        // `,
-        //     [id]
-        // );
-
-        // await dbDelete.run(`DELETE FROM projects WHERE user_id = ?`, [id]);
 
         await dbDelete.run(`DELETE FROM users WHERE id = ?`, [id]);
         await dbDelete.run("COMMIT");

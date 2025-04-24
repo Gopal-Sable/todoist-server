@@ -20,25 +20,14 @@ const CommentModel = {
         if (!Number.isInteger(page) || page < 1) page = 1;
         if (!Number.isInteger(limit) || limit < 1 || limit > 10000) limit = 100;
 
-        let sql = "SELECT * FROM comments";
-        let rowCountQuery = "SELECT COUNT(*) as rowCount FROM comments";
-        let params = [];
+        let sql = "SELECT * FROM comments where task_id= ?";
+        let rowCountQuery = "SELECT COUNT(*) as rowCount FROM comments where task_id= ?";
+        let params = [id];
 
-        if (id) {
-            if (!Number.isInteger(Number(id))) {
-                throw new Error("Invalid comment ID");
-            } else {
-                sql += " WHERE id = ?";
-                params.push(id);
-                return await db.get(sql, params);
-            }
-        }
-
-        // Use parameterized queries for pagination
         sql += " LIMIT ? OFFSET ?";
         params.push(limit, (page - 1) * limit);
 
-        const rowCount = await db.get(rowCountQuery);
+        const rowCount = await db.get(rowCountQuery,[id]);
         const comments = await db.all(sql, params);
 
         return {

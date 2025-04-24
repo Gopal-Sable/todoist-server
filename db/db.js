@@ -46,6 +46,7 @@ export async function createTable() {
         color VARCHAR(255) NOT NULL DEFAULT "White",
         is_favorite INTEGER DEFAULT 0,
         user_id int, 
+        is_deleted INTEGER DEFAULT 0,
         FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE 
     )`;
 
@@ -57,6 +58,7 @@ export async function createTable() {
         is_completed INTEGER DEFAULT 0,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         project_id INTEGER,
+        is_deleted INTEGER DEFAULT 0,
         FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     )`;
 
